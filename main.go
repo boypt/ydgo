@@ -12,6 +12,8 @@ import (
 	"github.com/fatih/color"
 )
 
+var VERSION = "0.0-src" //set with ldflags
+
 const (
 	YD_APINAME = "YouDaoCV"
 	YD_APIKEY  = "659600698"
@@ -85,6 +87,7 @@ func PrintExplain(v *jason.Object) {
 
 func main() {
 	if len(os.Args) < 2 {
+		color.HiWhite("%s version: %s", os.Args[0], VERSION)
 		color.HiRed("Usage:\n   %s word", os.Args[0])
 		return
 	}
