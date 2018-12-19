@@ -8,4 +8,4 @@ $(bin):
 	CGO_ENABLED=0 GOARCH=amd64 GOOS=darwin go build -o $(bin)_darwin -ldflags "-s -w -X main.VERSION=git-$$(git rev-parse --short HEAD)"; \
 
 clean:
-	rm -fv $(bin)_*
+	rm -fv $(bin).exe $(bin)_*
