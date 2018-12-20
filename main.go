@@ -96,17 +96,16 @@ func ydApi(query string) string {
 
 	// assume query is in utf-8
 	signstr := fmt.Sprintf("%s%s%d%s", YDAPPKEY, query, salt, YDSECKEY)
-	sign := fmt.Sprintf("%x", md5.Sum([]byte(signstr)))
-	yd_api := fmt.Sprintf("https://openapi.youdao.com/api?appKey=%s&q=%s&from=auto&to=zh-CHS&salt=%d&sign=%s",
+	sign := md5.Sum([]byte(signstr))
+	return fmt.Sprintf(
+		"https://openapi.youdao.com/api?appKey=%s&q=%s&from=auto&to=zh-CHS&salt=%d&sign=%x",
 		YDAPPKEY, url.QueryEscape(query), salt, sign)
-
-	return yd_api
 }
 
 func main() {
 	if len(os.Args) < 2 {
-		color.HiWhite("%s version: %s", os.Args[0], VERSION)
-		color.HiRed("Usage:\n   %s word", os.Args[0])
+		color.HiWhite("ydcv-go version: %s\n", VERSION)
+		color.HiRed("Usage:\n   %s word\n", os.Args[0])
 		return
 	}
 	query := strings.Join(os.Args[1:], " ")
