@@ -1,8 +1,10 @@
 package main
 
 import (
+	"crypto/md5"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
@@ -15,8 +17,8 @@ import (
 var VERSION = "0.0-src" //set with ldflags
 
 const (
-	YD_APINAME = "YouDaoCV"
-	YD_APIKEY  = "659600698"
+	YDAPPKEY = "1d9b4cc7c9694745"
+	YDSECKEY = "U9IEK5Qc4CMuWGvbsrwBXaeO6KO7xZwJ"
 )
 
 func httpGet(url string) *jason.Object {
@@ -39,20 +41,24 @@ func httpGet(url string) *jason.Object {
 func PrintExplain(v *jason.Object) {
 
 	query, _ := v.GetString("query")
-	color.HiWhite("%s\n\n", query)
+	fmt.Fprintf(color.Output, color.HiWhiteString("%s    ", query))
 
 	if basic, err := v.GetObject("basic"); err == nil {
 
+		var phonetis []string
 		if ph, err := basic.GetString("phonetic"); err == nil {
-			color.Yellow("  [%s]\n", ph)
+			phonetis = append(phonetis, fmt.Sprintf("[%s]", ph))
 		}
-		if us, err := basic.GetString("us-phonetic"); err == nil {
-			color.Yellow("  US:[%s]\n", us)
+		if ph, err := basic.GetString("us-phonetic"); err == nil {
+			phonetis = append(phonetis, fmt.Sprintf("US:[%s]", ph))
 		}
-		if uk, err := basic.GetString("uk-phonetic"); err == nil {
-			color.Yellow("  UK:[%s]\n", uk)
+		if ph, err := basic.GetString("uk-phonetic"); err == nil {
+			phonetis = append(phonetis, fmt.Sprintf("UK:[%s]", ph))
 		}
-		fmt.Println()
+		if len(phonetis) > 0 {
+			color.Yellow(strings.Join(phonetis, " "))
+			fmt.Println()
+		}
 
 		if expl, err := basic.GetStringArray("explains"); err == nil {
 			color.Cyan("  Word Explanation:\n")
@@ -85,6 +91,18 @@ func PrintExplain(v *jason.Object) {
 	}
 }
 
+func ydApi(query string) string {
+	salt := rand.Int31()
+
+	// assume query is in utf-8
+	signstr := fmt.Sprintf("%s%s%d%s", YDAPPKEY, query, salt, YDSECKEY)
+	sign := fmt.Sprintf("%x", md5.Sum([]byte(signstr)))
+	yd_api := fmt.Sprintf("https://openapi.youdao.com/api?appKey=%s&q=%s&from=auto&to=zh-CHS&salt=%d&sign=%s",
+		YDAPPKEY, url.QueryEscape(query), salt, sign)
+
+	return yd_api
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		color.HiWhite("%s version: %s", os.Args[0], VERSION)
@@ -92,11 +110,5 @@ func main() {
 		return
 	}
 	query := strings.Join(os.Args[1:], " ")
-	url := fmt.Sprintf(
-		"http://fanyi.youdao.com/openapi.do?keyfrom=%s&key=%s&type=data&doctype=json&version=1.2&q=%s",
-		YD_APINAME,
-		YD_APIKEY,
-		url.QueryEscape(query))
-
-	PrintExplain(httpGet(url))
+	PrintExplain(httpGet(ydApi(query)))
 }
