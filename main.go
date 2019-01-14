@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"crypto/md5"
+	"flag"
 	"fmt"
 	"log"
 	"math/rand"
@@ -14,9 +16,8 @@ import (
 	"github.com/fatih/color"
 )
 
-var VERSION = "0.0-src" //set with ldflags
-
 const (
+	VERSION  = "0.0-src" //set with ldflags
 	YDAPPKEY = "1d9b4cc7c9694745"
 	YDSECKEY = "U9IEK5Qc4CMuWGvbsrwBXaeO6KO7xZwJ"
 )
@@ -32,13 +33,12 @@ func httpGet(url string) *jason.Object {
 	if resp.StatusCode == 200 {
 		obj, _ := jason.NewObjectFromReader(resp.Body)
 		return obj
-	} else {
-		log.Fatalf("HTTP Non 200: %v", resp)
 	}
+	log.Fatalf("HTTP Non 200: %v", resp)
 	return nil
 }
 
-func PrintExplain(v *jason.Object) {
+func printExplain(v *jason.Object) {
 
 	query, _ := v.GetString("query")
 	fmt.Fprintf(color.Output, color.HiWhiteString("%s    ", query))
@@ -91,7 +91,7 @@ func PrintExplain(v *jason.Object) {
 	}
 }
 
-func ydApi(query string) string {
+func ydAPI(query string) string {
 	salt := rand.Int31()
 
 	// assume query is in utf-8
@@ -102,12 +102,45 @@ func ydApi(query string) string {
 		YDAPPKEY, url.QueryEscape(query), salt, sign)
 }
 
+func interativeMode() {
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Print("> ")
+		query, err := reader.ReadString('\n')
+		if query == ":q" || query == "\\q" || err != nil {
+			break
+		}
+		printExplain(httpGet(ydAPI(query)))
+	}
+}
+
+func showHelp() {
+	color.HiWhite("ydgo version: %s\n", VERSION)
+	color.HiRed("Usage:\n   %s [-i] word\n\n", os.Args[0])
+	flag.Usage()
+}
+
 func main() {
-	if len(os.Args) < 2 {
-		color.HiWhite("ydcv-go version: %s\n", VERSION)
-		color.HiRed("Usage:\n   %s word\n", os.Args[0])
+	var interative, help bool
+	flag.BoolVar(&interative, "i", false, "interative mode")
+	flag.BoolVar(&help, "h", false, "show this help")
+	flag.Parse()
+
+	if help {
+		showHelp()
 		return
 	}
+
+	if interative {
+		interativeMode()
+		return
+	}
+
+	if len(os.Args) < 2 {
+		showHelp()
+		return
+	}
+
 	query := strings.Join(os.Args[1:], " ")
-	PrintExplain(httpGet(ydApi(query)))
+	printExplain(httpGet(ydAPI(query)))
 }
