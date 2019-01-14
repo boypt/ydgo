@@ -22,6 +22,8 @@ const (
 	YDSECKEY = "U9IEK5Qc4CMuWGvbsrwBXaeO6KO7xZwJ"
 )
 
+var debug bool = false
+
 func httpGet(url string) *jason.Object {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -67,6 +69,8 @@ func printExplain(v *jason.Object) {
 			}
 			fmt.Println()
 		}
+	} else {
+		fmt.Println()
 	}
 
 	if web, err := v.GetObjectArray("web"); err == nil {
@@ -91,27 +95,47 @@ func printExplain(v *jason.Object) {
 	}
 }
 
-func ydAPI(query string) string {
+func ydAPI(query string, from string) string {
 	salt := rand.Int31()
 
 	// assume query is in utf-8
 	signstr := fmt.Sprintf("%s%s%d%s", YDAPPKEY, query, salt, YDSECKEY)
 	sign := md5.Sum([]byte(signstr))
-	return fmt.Sprintf(
-		"https://openapi.youdao.com/api?appKey=%s&q=%s&from=auto&to=zh-CHS&salt=%d&sign=%x",
-		YDAPPKEY, url.QueryEscape(query), salt, sign)
+	uri := fmt.Sprintf(
+		"https://openapi.youdao.com/api?appKey=%s&q=%s&from=%s&to=zh-CHS&salt=%d&sign=%x",
+		YDAPPKEY, url.QueryEscape(query), from, salt, sign)
+
+	if debug {
+		log.Println(uri)
+	}
+	return uri
 }
 
-func interativeMode() {
-	reader := bufio.NewReader(os.Stdin)
-	for {
-		fmt.Print("> ")
-		query, err := reader.ReadString('\n')
-		if query == ":q" || query == "\\q" || err != nil {
+func interativeMode(from string) {
+
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Print("> ")
+	for scanner.Scan() {
+		query := scanner.Text()
+		query = strings.TrimSpace(query)
+
+		if len(query) == 0 {
+			fmt.Print("\n> ")
+			continue
+		}
+
+		if query == ":q" || query == "\\q" {
 			break
 		}
-		printExplain(httpGet(ydAPI(query)))
+
+		printExplain(httpGet(ydAPI(query, from)))
+
+		fmt.Print("> ")
 	}
+	if err := scanner.Err(); err != nil {
+		fmt.Fprintln(os.Stderr, "reading standard input:", err)
+	}
+
 }
 
 func showHelp() {
@@ -122,8 +146,11 @@ func showHelp() {
 
 func main() {
 	var interative, help bool
-	flag.BoolVar(&interative, "i", false, "interative mode")
+	var from string
+	flag.BoolVar(&interative, "i", false, "interative mode, :q  \\q  EOF or Ctrl+C to exit.")
 	flag.BoolVar(&help, "h", false, "show this help")
+	flag.BoolVar(&debug, "d", false, "log api request")
+	flag.StringVar(&from, "f", "EN", "translate-from language, default: EN")
 	flag.Parse()
 
 	if help {
@@ -132,7 +159,7 @@ func main() {
 	}
 
 	if interative {
-		interativeMode()
+		interativeMode(from)
 		return
 	}
 
@@ -142,5 +169,5 @@ func main() {
 	}
 
 	query := strings.Join(os.Args[1:], " ")
-	printExplain(httpGet(ydAPI(query)))
+	printExplain(httpGet(ydAPI(query, from)))
 }
