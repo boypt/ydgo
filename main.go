@@ -16,8 +16,8 @@ import (
 	"github.com/fatih/color"
 )
 
+var VERSION string = "0.0-src" //set with ldflags
 const (
-	VERSION  = "0.0-src" //set with ldflags
 	YDAPPKEY = "1d9b4cc7c9694745"
 	YDSECKEY = "U9IEK5Qc4CMuWGvbsrwBXaeO6KO7xZwJ"
 )

@@ -1,10 +1,10 @@
 #!/bin/bash
 
 
-BIN=ydcv
+BIN=ydgo
 GITVER=$(git rev-parse --short HEAD)
 
-rm -fv ydcv_*
+rm -fv ydgo_*
 
 if [[ -e /proc/sys/kernel/osrelease ]] &&  grep -q -i microsoft /proc/sys/kernel/osrelease && command -v go.exe; then
   # for WSL 
