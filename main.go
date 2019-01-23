@@ -28,21 +28,30 @@ func httpGet(url string) *jason.Object {
 	resp, err := http.Get(url)
 	if err != nil {
 		// handle error
+		log.Fatalf("Fail to request api: %#v", err)
+		return nil
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode == 200 {
-		obj, _ := jason.NewObjectFromReader(resp.Body)
+		obj, err := jason.NewObjectFromReader(resp.Body)
+		if err != nil {
+			log.Fatalf("Fail to parse json: %#v", err)
+			return nil
+		}
 		return obj
 	}
-	log.Fatalf("HTTP Non 200: %v", resp)
+	log.Fatalf("HTTP Non 200: %#v", resp)
 	return nil
 }
 
-func printExplain(v *jason.Object) {
+func printExplain(q string, v *jason.Object) {
 
-	query, _ := v.GetString("query")
+	query, err := v.GetString("query")
+	if err != nil {
+		query = q
+	}
 	fmt.Fprintf(color.Output, color.HiWhiteString("%s    ", query))
 
 	if basic, err := v.GetObject("basic"); err == nil {
@@ -128,8 +137,7 @@ func interativeMode(from string) {
 			break
 		}
 
-		printExplain(httpGet(ydAPI(query, from)))
-
+		printExplain(query, httpGet(ydAPI(query, from)))
 		fmt.Print("> ")
 	}
 	if err := scanner.Err(); err != nil {
@@ -169,5 +177,5 @@ func main() {
 	}
 
 	query := strings.Join(os.Args[1:], " ")
-	printExplain(httpGet(ydAPI(query, from)))
+	printExplain(query, httpGet(ydAPI(query, from)))
 }
