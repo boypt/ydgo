@@ -162,13 +162,19 @@ func showHelp() {
 }
 
 func main() {
-	var interative bool
+	var interative, help bool
 	var configfile, from string
+	flag.BoolVar(&help, "h", false, "show this help.")
 	flag.BoolVar(&interative, "i", false, "interative mode, :q  \\q  EOF or Ctrl+C to exit.")
 	flag.BoolVar(&debug, "d", false, "log api request")
 	flag.StringVar(&from, "f", "EN", "translate-from language, default: EN")
 	flag.StringVar(&configfile, "c", "~/.ydgo", "translate-from language, default: EN")
 	flag.Parse()
+
+	if help {
+		showHelp()
+		os.Exit(0)
+	}
 
 	configfile = NormalizePath(configfile)
 	_, err := os.Stat(configfile)
