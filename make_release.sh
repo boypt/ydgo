@@ -1,9 +1,14 @@
 #!/bin/bash
 
+GITVER=$(git rev-parse --short HEAD)
+VER=$1
+
+if [[ -z $VER ]]; then
+  VER=$GITVER
+fi
+
 
 BIN=ydgo
-GITVER=$(git rev-parse --short HEAD)
-
 rm -fv ydgo_*
 
 # for normal unix env

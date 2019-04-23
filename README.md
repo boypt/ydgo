@@ -9,13 +9,13 @@ This project is a practise during the study of Go (newbie work in 100 lines). If
 # Config
 
 User need to apply for his own service API key from [有道智云](https://ai.youdao.com).
-Keys writted to a config file `.ydgo`, put at `HOME` dir. (`%USERPROFILE%` for windows)
+Keys writted to a config file `.ydgo`, put at `HOME` dir, or `%USERPROFILE%` for windows.
 
 Example:
 ```
 $ cat ~/.ydgo
-YDAppKey="123456"
-YDSecKey="abcd1234"
+YDAPPID="123456"
+YDAPPSEC="abcd1234"
 ```
 
 ## Environment:

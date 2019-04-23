@@ -20,8 +20,8 @@ import (
 var VERSION string = "0.0-src" //set with ldflags
 
 type Config struct {
-	YDAppKey string
-	YDSecKey string
+	YDAppId  string
+	YDAppSec string
 }
 
 var debug bool = false
@@ -117,11 +117,11 @@ func ydAPI(query string, from string) string {
 	salt := rand.Int31()
 
 	// assume query is in utf-8
-	signstr := fmt.Sprintf("%s%s%d%s", config.YDAppKey, query, salt, config.YDSecKey)
+	signstr := fmt.Sprintf("%s%s%d%s", config.YDAppId, query, salt, config.YDAppSec)
 	sign := md5.Sum([]byte(signstr))
 	uri := fmt.Sprintf(
 		"https://openapi.youdao.com/api?appKey=%s&q=%s&from=%s&to=zh-CHS&salt=%d&sign=%x",
-		config.YDAppKey, url.QueryEscape(query), from, salt, sign)
+		config.YDAppId, url.QueryEscape(query), from, salt, sign)
 
 	if debug {
 		log.Printf("Req: %s", uri)
