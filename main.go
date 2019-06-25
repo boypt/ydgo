@@ -10,22 +10,20 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"runtime"
 	"strings"
 
-	"github.com/BurntSushi/toml"
 	"github.com/antonholmquist/jason"
 	"github.com/fatih/color"
 )
 
-var VERSION string = "0.0-src" //set with ldflags
-
-type Config struct {
-	YDAppId  string
+var (
+	VERSION  string = "0.0-src" //set with ldflags
+	YDAppId  string             // must set on ldflags
 	YDAppSec string
-}
+)
 
 var debug bool = false
-var config Config
 
 func httpGet(url string) *jason.Object {
 	resp, err := http.Get(url)
@@ -117,11 +115,11 @@ func ydAPI(query string, from string) string {
 	salt := rand.Int31()
 
 	// assume query is in utf-8
-	signstr := fmt.Sprintf("%s%s%d%s", config.YDAppId, query, salt, config.YDAppSec)
+	signstr := fmt.Sprintf("%s%s%d%s", YDAppId, query, salt, YDAppSec)
 	sign := md5.Sum([]byte(signstr))
 	uri := fmt.Sprintf(
 		"https://openapi.youdao.com/api?appKey=%s&q=%s&from=%s&to=zh-CHS&salt=%d&sign=%x",
-		config.YDAppId, url.QueryEscape(query), from, salt, sign)
+		YDAppId, url.QueryEscape(query), from, salt, sign)
 
 	if debug {
 		log.Printf("Req: %s", uri)
@@ -163,27 +161,16 @@ func showHelp() {
 
 func main() {
 	var interative, help bool
-	var configfile, from string
+	var from string
 	flag.BoolVar(&help, "h", false, "show this help.")
 	flag.BoolVar(&interative, "i", false, "interative mode, :q  \\q  EOF or Ctrl+C to exit.")
 	flag.BoolVar(&debug, "d", false, "log api request")
 	flag.StringVar(&from, "f", "EN", "translate-from language, default: EN")
-	flag.StringVar(&configfile, "c", "~/.ydgo", "translate-from language, default: EN")
 	flag.Parse()
 
 	if help {
 		showHelp()
 		os.Exit(0)
-	}
-
-	configfile = NormalizePath(configfile)
-	_, err := os.Stat(configfile)
-	if err != nil {
-		log.Fatal("Config file is missing: ", configfile)
-	}
-
-	if _, err := toml.DecodeFile(configfile, &config); err != nil {
-		log.Fatal(err)
 	}
 
 	if interative || flag.NArg() == 0 {
@@ -193,4 +180,8 @@ func main() {
 
 	query := strings.Join(flag.Args(), " ")
 	printExplain(query, httpGet(ydAPI(query, from)))
+	if runtime.GOOS == "windows" {
+		fmt.Println("\nPress 'Enter' to continue...")
+		bufio.NewReader(os.Stdin).ReadBytes('\n')
+	}
 }
