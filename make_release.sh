@@ -1,7 +1,12 @@
 #!/bin/bash
-YDAPPID=""
-YDAPPSEC=""
-source .ydkey #
+if [[ -f .ydkey ]]; then
+  source .ydkey
+fi
+
+if [[ -z $YDAPPID ]] || [[ -z $YDAPPSEC ]]; then
+  echo "APPID/SEC unset"
+  exit 1
+fi
 
 VER=$(git describe --tags || git rev-parse --short HEAD)
 LDFLAGS="-s -w -X main.VERSION=$VER -X main.YDAppId=$YDAPPID -X main.YDAppSec=$YDAPPSEC"

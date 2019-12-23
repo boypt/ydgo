@@ -35,12 +35,11 @@ jobs:
         go get -v -t -d ./...
 
     - name: Build
+      env:
+        YDAPPID: ${{ secrets.YDAPPID }}
+        YDAPPSEC: ${{ secrets.YDAPPSEC }}
       run: |
-        GITVER=$(git describe --tags || git rev-parse --short HEAD)
-        LDFLAGS="main.YDAppId=${{ secrets.YDAPPID }} -X main.YDAppSec=${{ secrets.YDAPPSEC }} -X main.MAINVER=${GITVER} -s -w"
-        GOOS=linux GOARCH=amd64 go build -ldflags="$LDFLAGS" -v -o ydgo_amd64_linux
-        GOOS=darwin GOARCH=amd64 go build -ldflags="$LDFLAGS" -v -o ydgo_amd64_darwin
-        GOOS=windows GOARCH=amd64 go build -ldflags="$LDFLAGS" -v -o ydgo_amd64_windows.exe
+        bash make_release.sh
         zip ydgo_amd64_linux.zip ydgo_amd64_linux  
         zip ydgo_amd64_darwin.zip ydgo_amd64_darwin
         zip ydgo_amd64_windows.zip ydgo_amd64_windows.exe
