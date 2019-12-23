@@ -15,8 +15,9 @@ BIN=ydgo
 rm -fv ydgo_*
 
 # for normal unix env
+ARCH=amd64
 for OS in darwin linux; do
-  CGO_ENABLED=0 GOARCH=amd64 GOOS=$OS go build -o ${BIN}_${OS} -ldflags "${LDFLAGS}"
+  CGO_ENABLED=0 GOARCH=${ARCH} GOOS=$OS go build -o ${BIN}_${ARCH}_${OS} -ldflags "${LDFLAGS}"
 done
-CGO_ENABLED=0 GOARCH=amd64 GOOS=windows go build -o ${BIN}_windows.exe -ldflags "${LDFLAGS}"
+CGO_ENABLED=0 GOARCH=${ARCH} GOOS=windows go build -o ${BIN}_${ARCH}_windows.exe -ldflags "${LDFLAGS}"
 
