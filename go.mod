@@ -3,9 +3,7 @@ go 1.13
 module github.com/boypt/ydgo
 
 require (
-	github.com/BurntSushi/toml v0.3.1
 	github.com/antonholmquist/jason v1.0.0
-	github.com/fatih/color v1.7.0
-	github.com/mattn/go-colorable v0.1.1 // indirect
-	github.com/mattn/go-isatty v0.0.6 // indirect
+	github.com/fatih/color v1.14.1
+	golang.org/x/sys v0.5.0 // indirect
 )
